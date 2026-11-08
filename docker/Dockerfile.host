@@ -1,0 +1,11 @@
+# amd64 host dev image (same libs) for ReRed Faction II. Debian 12 (glibc 2.36) matches the
+# oldest firmware baseline we target; runtime libs come from the device/PortMaster.
+FROM debian:bookworm
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      gcc g++ gdb make pkg-config ca-certificates \
+      libsdl2-dev libsdl2-ttf-dev libvorbis-dev \
+      libavcodec-dev libavformat-dev libswscale-dev libswresample-dev \
+      libgles-dev libegl-dev && \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /src

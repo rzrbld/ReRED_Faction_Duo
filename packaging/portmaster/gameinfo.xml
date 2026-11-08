@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<gameList>
+  <game>
+    <path>./ReRed Faction II.sh</path>
+    <name>ReRed Faction II (Red Faction II)</name>
+    <desc>Red Faction II (2003, PC) running natively on ARM64 handhelds through static recompilation. Requires your own copy of the game.</desc>
+    <releasedate>20030401T000000</releasedate>
+    <developer>Volition</developer>
+    <publisher>THQ</publisher>
+    <genre>Shooter</genre>
+    <image>./rered_faction2/screenshot.png</image>
+  </game>
+</gameList>

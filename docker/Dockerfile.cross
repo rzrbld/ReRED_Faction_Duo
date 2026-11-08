@@ -1,0 +1,13 @@
+# aarch64 cross toolchain for ReRed Faction II. Debian 12 (glibc 2.36) matches the
+# oldest firmware baseline we target; runtime libs come from the device/PortMaster.
+# The host gcc is for FFmpeg's configure (scripts/build_ffmpeg.sh).
+FROM debian:bookworm
+RUN dpkg --add-architecture arm64 && apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      gcc-aarch64-linux-gnu g++-aarch64-linux-gnu make pkg-config ca-certificates curl \
+      gcc libc6-dev \
+      libsdl2-dev:arm64 libsdl2-ttf-dev:arm64 zlib1g-dev:arm64 \
+      libgles-dev:arm64 libegl-dev:arm64 && \
+    rm -rf /var/lib/apt/lists/*
+ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig CC=aarch64-linux-gnu-gcc
+WORKDIR /src

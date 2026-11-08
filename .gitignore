@@ -1,0 +1,16 @@
+# Build outputs and generated code (generated C is derived from the game's
+# executable and is never committed)
+/build/
+/dist/
+# The game, disc images, extracted files, FFmpeg sources: user-supplied / downloaded
+/original/
+/work/
+# Local notes and development helpers
+/analysis/
+/docs/
+/tools/dev.sh
+/tools/addr.sh
+/packaging/dev-run.sh
+/packaging/portmaster/screenshot.png
+__pycache__/
+*.pyc

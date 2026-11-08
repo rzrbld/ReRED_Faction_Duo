@@ -1,0 +1,34 @@
+{
+  "version": 4,
+  "name": "rered_faction2.zip",
+  "items": [
+    "ReRed Faction II.sh",
+    "rered_faction2/"
+  ],
+  "items_opt": [],
+  "attr": {
+    "title": "ReRed Faction II (Red Faction II)",
+    "porter": [
+      "rzrbld"
+    ],
+    "desc": "Experimental ARM64 static recompilation of Red Faction II (PC, 2003) with OpenGL ES rendering, Bink movies and Miles audio reimplemented. Your own copy of the game is required. Work in progress: not every level has been tested.",
+    "desc_md": null,
+    "inst": "Copy ReRed Faction II.sh into your Ports folder and rered_faction2 into ports. Put your own GOG.com installer of Red Faction II (setup_red_faction2_2.0.0.6.exe) in rered_faction2/source. Start ReRed Faction II: the first run unpacks it (about 1.4 GB, a few minutes). See README.md.",
+    "inst_md": null,
+    "genres": [
+      "action",
+      "fps"
+    ],
+    "image": null,
+    "rtr": false,
+    "exp": true,
+    "runtime": [],
+    "store": [],
+    "availability": "commercial",
+    "reqs": [],
+    "arch": [
+      "aarch64"
+    ],
+    "min_glibc": "2.36"
+  }
+}

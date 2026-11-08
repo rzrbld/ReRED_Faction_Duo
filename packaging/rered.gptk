@@ -1,0 +1,38 @@
+# ReRed Faction II - controller to keyboard/mouse via PortMaster gptokeyb.
+# Layout adopted from the community Xpadder profile "RF2 Controller Support
+# (Xpadder)" (ModDB, 2023), which targets the game's DEFAULT key bindings:
+#
+#   A jump (Space)          B use (E)            X reload (R)
+#   Y next weapon (wheel up: sent as Pause, turned into a wheel step by the port)
+#   LB ' key                RB grenade (G)       Back objectives (Tab)
+#   Start menu (Esc)        L3 Left Shift        R3 crouch (C)
+#   D-pad up/right N        LT alt fire (right mouse)   RT fire (left mouse)
+#   Left stick move (WASD)  Right stick look (mouse); menus: right stick
+#   moves the cursor, RT clicks, Start goes back.
+#
+# Mouse speed: mouse_scale is a divisor (gptokeyb default 512; higher =
+# slower). Per-user copy: conf/rered.gptk.
+mouse_scale = 4096
+mouse_delay = 16
+start = esc
+back = tab
+a = space
+b = e
+x = r
+y = pause
+l1 = '
+r1 = g
+l3 = leftshift
+r3 = c
+up = n
+right = n
+left_analog_up = w
+left_analog_down = s
+left_analog_left = a
+left_analog_right = d
+right_analog_up = mouse_movement_up
+right_analog_down = mouse_movement_down
+right_analog_left = mouse_movement_left
+right_analog_right = mouse_movement_right
+r2 = mouse_left
+l2 = mouse_right

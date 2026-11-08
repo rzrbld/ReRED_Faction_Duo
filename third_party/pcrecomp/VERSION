@@ -1,0 +1,3 @@
+PCRecomp runtime (recomp32 + win32hle) from https://github.com/sp00nznet/pcrecomp
+snapshot: pcrecomp-main.zip sha256 5b2a86251f745a959e177ee4835e409fb45d9293f86dc62902c3b8227f7a4975
+local changes: LOCAL_CHANGES.md
