@@ -1,6 +1,8 @@
 {
   "rf2": {
     "005A8B40": "rr_native_memmove",
-    "005B1E80": "rr_native_memmove"
+    "005B1E80": "rr_native_memmove",
+    "00553280": "rr_native_vec_rot",
+    "00552B40": "rr_native_mat_copy"
   }
 }

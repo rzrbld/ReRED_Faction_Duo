@@ -34,7 +34,10 @@ ST = re.compile(r"_st\[(\d+)\]")
 CALL = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 PURE = {"MEM8", "MEM16", "MEM32", "MEM64", "ADDR", "sizeof", "sqrt", "fabs", "floor", "ceil", "trunc", "nearbyint",
         "sin", "cos", "tan", "atan", "atan2", "pow", "log", "exp", "ldexp", "fmod", "remainder", "FPU_CMP",
-        "fp_round_cw", "fp_to_int"}
+        "fp_round_cw", "fp_to_int",
+        # integer/guest-memory macros of recomp_types.h: they never touch x87 state
+        "PUSH32", "POP32_VAL", "LO8", "LO16", "HI8", "SET_LO8", "SET_LO16", "SET_HI8", "FK_NARROW", "RECOMP_PF"}
+PURE_PREFIX = ("CMP_", "TEST_")
 CTRL = re.compile(r"\b(goto|return|if|else|switch|case|while|for|do|break|continue)\b|^\s*\w+:\s*$|[{}]")
 
 def split(line):
@@ -69,7 +72,18 @@ class Fn:
             self.v = []
 
     def pure_calls(self, code):
-        return all(m.group(1) in PURE for m in CALL.finditer(code))
+        return all(m.group(1) in PURE or m.group(1).startswith(PURE_PREFIX) for m in CALL.finditer(code))
+
+    @staticmethod
+    def unbrace(s):
+        """a one-line { ... } block with no nested braces: its body, else None"""
+        if s.startswith("{") and s.endswith("}") and "{" not in s[1:-1] and "}" not in s[1:-1]:
+            return s[1:-1]
+        return None
+
+    def is_ctrl(self, s):
+        body = self.unbrace(s)
+        return bool(CTRL.search(body if body is not None else s))
 
     def line(self, line):
         code, comment = split(line)
@@ -79,7 +93,7 @@ class Fn:
             self.out.append(line); return
         x87 = ("_st[" in s) or ("fp_" in s) or ("g_st" in s)
         if not x87:
-            if CTRL.search(s) or not self.pure_calls(s) or "RECOMP" in s:
+            if self.is_ctrl(s) or not self.pure_calls(s):
                 self.flush(ind)
             self.out.append(line); return
         # ---- x87 statements
@@ -132,7 +146,7 @@ class Fn:
                     self.out.append(f"{ind}{pre}{top}{self.remap(post)} {comment}".rstrip()); return
                 self.out.append(line); return
             self.flush(ind); self.out.append(line); return
-        if "fp_" not in s and not CTRL.search(s) and self.pure_calls(s):
+        if "fp_" not in s and not self.is_ctrl(s) and self.pure_calls(s):
             self.out.append(f"{ind}{self.remap(s)} {comment}".rstrip()); return
         self.flush(ind); self.out.append(line)
 

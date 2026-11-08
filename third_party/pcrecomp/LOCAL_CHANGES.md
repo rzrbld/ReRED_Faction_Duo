@@ -37,3 +37,8 @@ Every local edit is marked `[rered]` in the source.
 - `win32hle/module.c`: `SetCurrentDirectoryA` falls back to the overlay copy of
   a directory (one the game created with CreateDirectoryA, e.g. RF2's
   `profiles`), so the game can enter it; the read-only game dir lacks it.
+- `recomp32/recomp_types.h`: `RECOMP_ICALL`/`RECOMP_ITAIL` resolve through
+  `RECOMP_RESOLVE`, a one-entry cache per call site (lifted code runs under the
+  machine lock, so the statics are not raced); targets in the shim range
+  (`RECOMP_SHIM_BASE`, = host_lite's `SHIM_BASE`) go straight to the import
+  lookup and are never cached, since each lookup re-arms the shim trampoline.

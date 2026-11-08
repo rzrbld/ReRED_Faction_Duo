@@ -1217,12 +1217,29 @@ recomp_func_t recomp_lookup_import(uint32_t va);    /* import bridges */
 } while(0)
 
 /* Indirect call through dispatch */
+/* [rered] Resolution with a one-entry cache per call site: most indirect
+ * calls (vtables, callbacks) hit the same target every time. Lifted code runs
+ * only under the machine lock, so the two statics are never raced. Import
+ * shims (synthetic VAs from RECOMP_SHIM_BASE) skip the dispatch search and are
+ * never cached: their trampoline is re-armed by each lookup. */
+#ifndef RECOMP_SHIM_BASE
+#define RECOMP_SHIM_BASE 0x7F000000u
+#endif
+#define RECOMP_RESOLVE(_va, _fn) do { \
+    static uint32_t _ic_va = 1u; static recomp_func_t _ic_fn; \
+    if ((_va) == _ic_va) (_fn) = _ic_fn; \
+    else if ((_va) >= RECOMP_SHIM_BASE) (_fn) = recomp_lookup_import(_va); \
+    else { \
+        (_fn) = recomp_lookup_manual(_va); \
+        if (!(_fn)) (_fn) = recomp_lookup(_va); \
+        if (_fn) { _ic_fn = (_fn); _ic_va = (_va); } \
+        else (_fn) = recomp_lookup_import(_va); \
+    } \
+} while (0)
 #define RECOMP_ICALL(target_va) do { \
     uint32_t _va = (uint32_t)(target_va); \
     RECOMP_ICALL_NOTE(_va); \
-    recomp_func_t _fn = recomp_lookup_manual(_va); \
-    if (!_fn) _fn = recomp_lookup(_va); \
-    if (!_fn) _fn = recomp_lookup_import(_va); \
+    recomp_func_t _fn; RECOMP_RESOLVE(_va, _fn); \
     if (_fn) { \
         RECOMP_CF_SAVE(); \
         PUSH32(esp, RECOMP_RETADDR); \
@@ -1245,9 +1262,7 @@ recomp_func_t recomp_lookup_import(uint32_t va);    /* import bridges */
 #define RECOMP_ITAIL(target_va) do { \
     uint32_t _va = (uint32_t)(target_va); \
     RECOMP_ICALL_NOTE(_va); \
-    recomp_func_t _fn = recomp_lookup_manual(_va); \
-    if (!_fn) _fn = recomp_lookup(_va); \
-    if (!_fn) _fn = recomp_lookup_import(_va); \
+    recomp_func_t _fn; RECOMP_RESOLVE(_va, _fn); \
     if (_fn) { RECOMP_FLAGS_OUT(); RECOMP_REGS_OUT(); _fn(); RECOMP_REGS_IN(); } \
     else if (_va == RECOMP_RETADDR) { /* setjmp and friends return by jumping \
         to the saved return address; that is a return, not a missing target. */ } \

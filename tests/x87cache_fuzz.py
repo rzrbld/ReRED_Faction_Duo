@@ -24,7 +24,9 @@ static inline double fp_pop(void) { double v = g_buf[g_base]; g_base++; g_fp_top
 #define FPU_CMP(a, b) ((a) < (b) ? -1 : (a) > (b) ? 1 : (a) == (b) ? 0 : 2)
 static float g_mem[64];
 #define ADDR(a) ((uintptr_t)&g_mem[(a) & 63])
-static uint32_t eax = 3, ecx = 7;
+static uint32_t eax = 3, ecx = 7, esp = 40;
+#define PUSH32(sp, val) do { (sp) -= 4; g_mem[((sp) >> 2) & 63] = (float)(val); } while (0)
+#define CMP_B(a, b) ((uint32_t)(a) < (uint32_t)(b))
 static int _fpu_cmp;
 void FN(void);
 int main(void) {
@@ -73,6 +75,12 @@ def gen(rng, nlines):
             lines.append(f"    eax = (eax * 5 + {a}) & 63; /* int */")
         elif depth >= 1 and r < 0.90:
             lines.append(f"    _st[0] = -_st[0]; /* fchs */")
+        elif depth >= 1 and r < 0.915:
+            lines.append(f"    {{ float _v = (float)_st[{rng.randrange(depth)}]; *(float*)ADDR(eax + {a}) = _v; }} /* fst */")
+        elif r < 0.925:
+            lines.append(f"    PUSH32(esp, eax); /* push */")
+        elif r < 0.93:
+            lines.append(f"    eax = CMP_B(eax, {a}) + ecx; /* flags-ish */")
         elif r < 0.94:
             labels += 1
             lines.append(f"L_{labels}:")
