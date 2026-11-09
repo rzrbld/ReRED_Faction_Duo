@@ -2,7 +2,7 @@
 #                   Device: make ARCH=aarch64 (inside docker rered-cross:bookworm)
 ARCH   ?= host
 GEN    ?= build/gen
-OUT    := build/$(ARCH)
+OUT    ?= build/$(ARCH)
 ifeq ($(ARCH),aarch64)
 CC     := aarch64-linux-gnu-gcc
 TUNE   := -mcpu=cortex-a53
@@ -21,6 +21,19 @@ ICALL_TRACE ?= 0
 TRACK_CUR_FUNC ?= 0
 GENFLAGS := $(CFLAGS) -w $(if $(filter 1,$(LOCAL_REGS)),-DRECOMP_LOCAL_REGS) $(if $(filter 1,$(NONVOLATILE_MEM)),-DRECOMP_NONVOLATILE_MEM)
 LIBS   := $(shell pkg-config --libs sdl2 SDL2_ttf) -lpthread -lm -ldl
+# PGO=gen: instrumented build (counters written on the device under
+# GCOV_PREFIX, see tools/pgo.sh); PGO=use: optimised with those counters.
+PGO ?=
+PGO_DIR ?= /src/build/pgo-data
+ifeq ($(PGO),gen)
+CFLAGS   += -fprofile-generate=$(PGO_DIR) -fprofile-update=single -DRERED_PGO_GEN
+GENFLAGS += -fprofile-generate=$(PGO_DIR) -fprofile-update=single
+LIBS     += -fprofile-generate=$(PGO_DIR)
+endif
+ifeq ($(PGO),use)
+CFLAGS   += -fprofile-use=$(PGO_DIR) -fprofile-partial-training -Wno-missing-profile -Wno-coverage-mismatch
+GENFLAGS += -fprofile-use=$(PGO_DIR) -fprofile-partial-training -Wno-missing-profile -Wno-coverage-mismatch
+endif
 # minimal static FFmpeg (scripts/build_ffmpeg.sh): Bink movies, Miles MP3
 FFMPEG := build/ffmpeg/$(ARCH)
 ifneq ($(wildcard $(FFMPEG)/lib/libavcodec.a),)

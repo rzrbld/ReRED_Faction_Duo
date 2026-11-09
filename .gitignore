@@ -10,7 +10,6 @@
 /docs/
 /tools/dev.sh
 /tools/addr.sh
-/packaging/dev-run.sh
 /packaging/portmaster/screenshot.png
 __pycache__/
 *.pyc

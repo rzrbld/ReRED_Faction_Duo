@@ -167,6 +167,7 @@ static void pad_update(void) {
  *   m DX DY   relative mouse move (accumulated like a real mouse)
  *   c         left click (press now, release 150 ms later)
  *   k DIK     tap a key (DirectInput scan code, decimal; press + release)
+ *   K DIK MS  hold a key for MS milliseconds (one held key at a time)
  * Used to drive menus on the device for unattended profiling. */
 static void script_step(void) {
     static const char *s; static uint32_t t0; static int init;
@@ -182,7 +183,11 @@ static void script_step(void) {
         c++;
         if (*c == 'm') { int dx = 0, dy = 0; sscanf(c + 1, "%d %d", &dx, &dy); g_mouse.acc_x += (float)dx; g_mouse.acc_y += (float)dy; }
         else if (*c == 'c') { g_mouse.real_buttons |= 1; release_click = now + 150; }
-        else if (*c == 'k') { int k = 0; sscanf(c + 1, "%d", &k); if (k > 0 && k < 256) { set_key(g_kb_real, (uint8_t)k, 1); key_down = k; release_key = now + 150; } }
+        else if (*c == 'k' || *c == 'K') {
+            int k = 0, ms = 150; sscanf(c + 1, "%d %d", &k, &ms); if (*c == 'k') ms = 150;
+            if (key_down >= 0) set_key(g_kb_real, (uint8_t)key_down, 0);
+            if (k > 0 && k < 256) { set_key(g_kb_real, (uint8_t)k, 1); key_down = k; release_key = now + (uint32_t)ms; }
+        }
         fprintf(stderr, "[script] %.1fs: %.*s\n", (now - t0) / 1000.0, (int)strcspn(c, ";"), c);
         s = strchr(s, ';'); if (s) s++;
     }

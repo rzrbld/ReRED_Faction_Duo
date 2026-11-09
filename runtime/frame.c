@@ -85,7 +85,23 @@ static void fps_overlay(double fps) {
     if (!sc_on) glDisable(GL_SCISSOR_TEST);
     rr_apply_write_masks();
 }
+/* PGO training runs (RERED_GCOV_DUMP=SECONDS): write the profile counters
+ * once that long after start, then keep running. Weak: absent in normal builds. */
+#ifdef RERED_PGO_GEN
+extern void __gcov_dump(void);        /* a strong reference pulls it out of libgcov */
+#else
+extern void __gcov_dump(void) __attribute__((weak));
+#endif
+static void gcov_hook(void) {
+    static int state = 0; static uint64_t t0;
+    if (state == 2 || !__gcov_dump) return;
+    uint64_t now = SDL_GetPerformanceCounter(), f = SDL_GetPerformanceFrequency();
+    const char *e = getenv("RERED_GCOV_DUMP");
+    if (!state) { if (!e) { state = 2; return; } t0 = now; state = 1; }
+    if ((double)(now - t0) / (double)f >= atof(e)) { __gcov_dump(); fprintf(stderr, "[pgo] profile written\n"); state = 2; }
+}
 void rr_present_hook(void) {
+    gcov_hook();
     {   /* RERED_DLOG=N: log the draws of one frame every N seconds */
         extern int rr_dlog_on; static int every = -1; static uint64_t last;
         if (every < 0) every = rr_config_int("dlog", 0);

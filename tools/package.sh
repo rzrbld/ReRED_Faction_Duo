@@ -6,11 +6,14 @@
 set -eu
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 OUT=$ROOT/dist/stage
+# the game binary: the profile-guided build with PGO=1 (tools/pgo.sh)
+if [ "${PGO:-0}" = 1 ]; then BIN=build/pgo/rered; else BIN=build/aarch64/rered; fi
 rm -rf "$OUT"; mkdir -p "$OUT/rered_faction2/licenses"
 cp "$ROOT/packaging/ReRed Faction II.sh" "$OUT/"
 P=$OUT/rered_faction2
 docker run --rm -u "$(id -u):$(id -g)" -v "$ROOT:/src" -w /src rered-cross:bookworm sh -c '
-  aarch64-linux-gnu-strip -o dist/stage/rered_faction2/rered.aarch64 build/aarch64/rered
+  aarch64-linux-gnu-strip -o dist/stage/rered_faction2/rered.aarch64 '"$BIN"'
+
   aarch64-linux-gnu-gcc -O2 -o dist/stage/rered_faction2/rered-launcher.aarch64 launcher/rered_launcher.c $(pkg-config --cflags --libs sdl2)
   aarch64-linux-gnu-gcc -O2 -o dist/stage/rered_faction2/rered-import.aarch64 tools/import/rered-import.c -Wl,-Bstatic -lz -Wl,-Bdynamic
   aarch64-linux-gnu-strip dist/stage/rered_faction2/rered-launcher.aarch64 dist/stage/rered_faction2/rered-import.aarch64

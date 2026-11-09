@@ -80,8 +80,17 @@ cpu_perf() {
   done
   echo "[rered] cpu: performance governor${cap:+, capped at $((cap / 1000)) MHz (H700)} (restored on exit)"
 }
+# what is actually in effect, per cluster (a firmware may refuse the change)
+cpu_report() {
+  local pol
+  for pol in /sys/devices/system/cpu/cpufreq/policy*; do
+    [ -r "$pol/scaling_governor" ] || continue
+    echo "[rered] cpu ${pol##*/}: $(cat "$pol/related_cpus" 2>/dev/null | tr ' ' ',') $(cat "$pol/scaling_governor"), max $(( $(cat "$pol/scaling_max_freq") / 1000 )) of $(( $(cat "$pol/cpuinfo_max_freq") / 1000 )) MHz"
+  done
+}
 trap cpu_restore EXIT
 [ "${RERED_CPU:-perf}" = perf ] && cpu_perf
+cpu_report
 
 # Controls (RERED_JOY in conf/rered.cfg, set by the launcher):
 #   0 (default) keyboard + mouse through gptokeyb (rered.gptk, remappable in

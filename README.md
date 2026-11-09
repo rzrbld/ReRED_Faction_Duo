@@ -63,6 +63,10 @@ docker run --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src rered-cross:bookworm \
 tools/package.sh
 ```
 
+Optional, faster (~4% less CPU): a profile-guided build trained by one scripted
+session on a handheld with the game imported -
+`RERED_DEV=root@HANDHELD tools/pgo.sh`, then `PGO=1 tools/package.sh`.
+
 The generated code is derived from your copy of the game and is not part of
 this repository.
 
