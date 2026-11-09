@@ -408,7 +408,7 @@ static int run_import(void) {
     fcntl(pfd[0], F_SETFL, O_NONBLOCK);
     memset(g_log, 0, sizeof g_log);
     Uint32 t0 = SDL_GetTicks();
-    char buf[512]; size_t bl = 0; int status = -1;
+    char buf[512]; size_t bl = 0; int status = -1, exited = 0;
     for (;;) {
         ssize_t r = read(pfd[0], buf + bl, sizeof buf - 1 - bl);
         if (r > 0) {
@@ -417,8 +417,17 @@ static int run_import(void) {
             while ((nl = strchr(buf, '\n'))) { *nl = 0; printf("%s\n", buf); log_push(buf); memmove(buf, nl + 1, strlen(nl + 1) + 1); bl = strlen(buf); }
             if (bl == sizeof buf - 1) { log_push(buf); bl = 0; }
         }
-        int st; pid_t w = waitpid(pid, &st, WNOHANG);
-        if (w == pid) { status = WIFEXITED(st) ? WEXITSTATUS(st) : -1; if (r <= 0) break; }
+        /* The child is reaped once; after that waitpid() no longer reports
+         * it, so remember the exit and leave when the pipe is drained (EOF,
+         * or nothing left to read). Waiting for "exit and nothing read in
+         * the same pass" hung forever when the last line arrived with the
+         * exit. */
+        if (!exited) {
+            int st; pid_t w = waitpid(pid, &st, WNOHANG);
+            if (w == pid) { exited = 1; status = WIFEXITED(st) ? WEXITSTATUS(st) : -1; }
+            else if (w < 0) { exited = 1; }          /* lost the child: do not wait forever */
+        }
+        if (exited && r <= 0) { if (bl) { log_push(buf); bl = 0; } break; }
         Uint32 s = (SDL_GetTicks() - t0) / 1000;
         frame_begin("SMUGGLING SUPPLIES IN");
         char el[40]; snprintf(el, sizeof el, "ELAPSED %02u:%02u", s / 60, s % 60);
@@ -456,6 +465,7 @@ static int page_import(void) {
         hints(ready ? hr : hs);
         present();
         int k = poll_key();
+        if (ready && getenv("RERED_AUTOIMPORT")) k = K_A;      /* tests */
         if (k == K_QUIT || k == K_B) return EXIT_USER;
         if (k == K_A && ready) {
             int rc = run_import();
